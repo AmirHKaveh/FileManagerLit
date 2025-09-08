@@ -63,7 +63,7 @@ namespace FileManagerLite
                 }
             }
 
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
         public async Task<FileManagerResult> CreateNewDirectoryAsync(string? currentPath, string directoryName)
@@ -86,7 +86,7 @@ namespace FileManagerLite
             var finalPath = Path.Combine(basePath, uniqueDirectoryName);
 
             Directory.CreateDirectory(finalPath);
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
         public async Task<FileManagerResult> DeleteDirectoriesOrFilesAsync(List<string> paths)
@@ -115,7 +115,7 @@ namespace FileManagerLite
                     System.IO.File.Delete(fullPath);
                 }
             }
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
         public async Task<(FileManagerResult, FileStreamResult)> DownloadAsync(string path)
@@ -134,7 +134,7 @@ namespace FileManagerLite
 
             var stream = new FileStream(filePath, FileMode.Open);
 
-            return (new FileManagerResult(200, "ok", true), new FileStreamResult(stream, contentType));
+            return (new FileManagerResult(200, "عملیات با موفقیت انجام شد", true), new FileStreamResult(stream, contentType));
         }
 
         public async Task<FileManagerResult> GetDirectoriesAsync(string? currentPath)
@@ -224,7 +224,7 @@ namespace FileManagerLite
                 }
             }
 
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
         public async Task<FileManagerResult> RenameDirectoryOrFileAsync(string sourcePath, string newName)
@@ -274,7 +274,7 @@ namespace FileManagerLite
 
                 System.IO.File.Move(sourceFullPath, destinationPath);
             }
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
         public async Task<FileManagerResult> UnzipAsync(string zipPath, string extractPath)
@@ -294,14 +294,14 @@ namespace FileManagerLite
 
             ZipFile.ExtractToDirectory(zipFilePath, extractFilePath, true);
 
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
         public async Task<FileManagerResult> UploadAsync(UploadFileManagerRequestModel request)
         {
             if (!request.Files.Any())
             {
-                return new FileManagerResult(200, "ok");
+                return new FileManagerResult(200, "عملیات با موفقیت انجام شد");
             }
 
             var path = Path.Combine(_pathProvider.WebRootPath, _rootPath);
@@ -335,7 +335,7 @@ namespace FileManagerLite
                 }
             }
 
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
         public async Task<FileManagerResult> ZipAsync(FileZipRequestModel request)
@@ -367,7 +367,7 @@ namespace FileManagerLite
                 }
             }
 
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
         [NonAction]
