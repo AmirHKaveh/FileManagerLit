@@ -21,16 +21,16 @@ namespace FileManager.Services
             _rootPath = options.Value.RootPath;
         }
 
-        public async Task<ApiResponse> CopyDirectoriesOrFilesAsync(List<string> sourcePaths, string destinationPath)
+        public async Task<FileManagerResult> CopyDirectoriesOrFilesAsync(List<string> sourcePaths, string destinationPath)
         {
             if (sourcePaths == null || sourcePaths.Count == 0)
             {
-                return new ApiResponse(400, "لیست مسیرهای منبع نمی تواند خالی باشد !");
+                return new FileManagerResult(400, "لیست مسیرهای منبع نمی تواند خالی باشد !");
             }
 
             if (string.IsNullOrEmpty(destinationPath))
             {
-                return new ApiResponse(400, "مسیر مقصد معتبر نمی باشد !");
+                return new FileManagerResult(400, "مسیر مقصد معتبر نمی باشد !");
             }
 
             var destinationDirectoryPath = Path.Combine(_pathProvider.WebRootPath, destinationPath);
@@ -38,7 +38,7 @@ namespace FileManager.Services
             // Validate the destination directory
             if (!Directory.Exists(destinationDirectoryPath))
             {
-                return new ApiResponse(400, "مسیر مقصد معتبر نمی باشد !");
+                return new FileManagerResult(400, "مسیر مقصد معتبر نمی باشد !");
             }
 
             foreach (var sourcePath in sourcePaths)
@@ -49,7 +49,7 @@ namespace FileManager.Services
 
                 if (!IsValidPathDirectoryOrFile(sourceFullPath))
                 {
-                    return new ApiResponse(400, $"مسیر منبع معتبر نمی باشد !");
+                    return new FileManagerResult(400, $"مسیر منبع معتبر نمی باشد !");
                 }
 
                 var sourceInfo = new DirectoryInfo(sourceFullPath);
@@ -64,21 +64,21 @@ namespace FileManager.Services
                 }
             }
 
-            return new ApiOkResponse("ok");
+            return new FileManagerResult(200, "ok", true);
         }
 
-        public async Task<ApiResponse> CreateNewDirectoryAsync(string? currentPath, string directoryName)
+        public async Task<FileManagerResult> CreateNewDirectoryAsync(string? currentPath, string directoryName)
         {
             string folderNamePattern = @"^([\w-]+\.?)*[\w-]+$";
 
             if (string.IsNullOrEmpty(directoryName))
             {
-                return new ApiResponse(400, "لطفا نام فولدر را وارد نمایید !");
+                return new FileManagerResult(400, "لطفا نام فولدر را وارد نمایید !");
             }
 
             if (!Regex.IsMatch(directoryName, folderNamePattern))
             {
-                return new ApiResponse(400, "لطفا نام فولدر را بصورت صحیح وارد نمایید !");
+                return new FileManagerResult(400, "لطفا نام فولدر را بصورت صحیح وارد نمایید !");
             }
 
             var (nameWithoutExt, extension) = GetFileNameParts(directoryName);
@@ -87,22 +87,22 @@ namespace FileManager.Services
             var finalPath = Path.Combine(basePath, uniqueDirectoryName);
 
             Directory.CreateDirectory(finalPath);
-            return new ApiOkResponse("ok");
+            return new FileManagerResult(200, "ok", true);
         }
 
-        public async Task<ApiResponse> DeleteDirectoriesOrFilesAsync(List<string> paths)
+        public async Task<FileManagerResult> DeleteDirectoriesOrFilesAsync(List<string> paths)
         {
             foreach (var currentPath in paths)
             {
                 var fullPath = Path.Combine(_pathProvider.WebRootPath, currentPath);
                 if (string.IsNullOrEmpty(currentPath))
                 {
-                    return new ApiResponse(400, "مسیر فایل معتبر نمی باشد");
+                    return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
                 }
                 var path = currentPath.GetSubstringToLastSlash();
                 if (!System.IO.File.Exists(fullPath) && !System.IO.Directory.Exists(fullPath))
                 {
-                    return new ApiResponse(400, "مسیر فایل معتبر نمی باشد");
+                    return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
                 }
                 FileAttributes attr = System.IO.File.GetAttributes(fullPath);
 
@@ -116,16 +116,16 @@ namespace FileManager.Services
                     System.IO.File.Delete(fullPath);
                 }
             }
-            return new ApiOkResponse("ok");
+            return new FileManagerResult(200, "ok", true);
         }
 
-        public async Task<(ApiResponse, FileStreamResult)> DownloadAsync(string path)
+        public async Task<(FileManagerResult, FileStreamResult)> DownloadAsync(string path)
         {
             var filePath = Path.Combine(_pathProvider.WebRootPath, path);
             filePath = HttpUtility.UrlDecode(filePath);
             if (!System.IO.File.Exists(filePath))
             {
-                return (new ApiResponse(404, "فایلی یافت نشد!"), null);
+                return (new FileManagerResult(400, "فایلی یافت نشد!"), null);
             }
             var extension = Path.GetExtension(filePath);
             var fileName = Path.GetFileName(filePath);
@@ -135,10 +135,10 @@ namespace FileManager.Services
 
             var stream = new FileStream(filePath, FileMode.Open);
 
-            return (new ApiOkResponse("ok"), new FileStreamResult(stream, contentType));
+            return (new FileManagerResult(200, "ok", true), new FileStreamResult(stream, contentType));
         }
 
-        public async Task<ApiResponse> GetDirectoriesAsync(string? currentPath)
+        public async Task<FileManagerResult> GetDirectoriesAsync(string? currentPath)
         {
             var filePath = Path.Combine(_pathProvider.WebRootPath, _rootPath);
             if (!string.IsNullOrEmpty(currentPath))
@@ -149,11 +149,11 @@ namespace FileManager.Services
             DirectoryInfo objDirectoryInfo = new DirectoryInfo(filePath);
             if (!Path.Exists(filePath))
             {
-                return new ApiResponse(404, "مسیری یافت نشد !");
+                return new FileManagerResult(400, "مسیری یافت نشد !");
             }
             if (!objDirectoryInfo.Exists)
             {
-                return new ApiResponse(404, "فولدری یافت نشد !");
+                return new FileManagerResult(400, "فولدری یافت نشد !");
             }
             DirectoryInfo[] directories = objDirectoryInfo.GetDirectories();
             var files = objDirectoryInfo.GetFiles();
@@ -178,19 +178,19 @@ namespace FileManager.Services
                 Size = x.Length,
             }));
 
-            return new ApiOkResponse(result);
+            return new FileManagerResult(200, "ok", true);
         }
 
-        public async Task<ApiResponse> MoveDirectoriesOrFilesAsync(List<string> sourcePaths, string destinationPath)
+        public async Task<FileManagerResult> MoveDirectoriesOrFilesAsync(List<string> sourcePaths, string destinationPath)
         {
             if (sourcePaths == null || sourcePaths.Count == 0)
             {
-                return new ApiResponse(400, "هیچ مسیر منبعی ارائه نشده است!");
+                return new FileManagerResult(400, "هیچ مسیر منبعی ارائه نشده است!");
             }
 
             if (string.IsNullOrWhiteSpace(destinationPath))
             {
-                return new ApiResponse(400, "مسیر مقصد معتبر نمی باشد!");
+                return new FileManagerResult(400, "مسیر مقصد معتبر نمی باشد!");
             }
 
             var rootPath = _pathProvider.WebRootPath;
@@ -198,7 +198,7 @@ namespace FileManager.Services
 
             if (!Directory.Exists(destinationRoot))
             {
-                return new ApiResponse(400, "مسیر مقصد وجود ندارد!");
+                return new FileManagerResult(400, "مسیر مقصد وجود ندارد!");
             }
 
             foreach (var relativeSourcePath in sourcePaths)
@@ -209,7 +209,7 @@ namespace FileManager.Services
 
                 if (!System.IO.File.Exists(sourceFullPath) && !Directory.Exists(sourceFullPath))
                 {
-                    return new ApiResponse(400, $"مسیر منبع معتبر نمی‌باشد!");
+                    return new FileManagerResult(400, $"مسیر منبع معتبر نمی‌باشد!");
                 }
 
                 var itemName = Path.GetFileName(sourceFullPath);
@@ -221,30 +221,30 @@ namespace FileManager.Services
                 }
                 catch (Exception ex)
                 {
-                    return new ApiResponse(500, $"خطا در انتقال '{relativeSourcePath}': {ex.Message}");
+                    return new FileManagerResult(500, $"خطا در انتقال '{relativeSourcePath}': {ex.Message}");
                 }
             }
 
-            return new ApiOkResponse("ok");
+            return new FileManagerResult(200, "ok", true);
         }
 
-        public async Task<ApiResponse> RenameDirectoryOrFileAsync(string sourcePath, string newName)
+        public async Task<FileManagerResult> RenameDirectoryOrFileAsync(string sourcePath, string newName)
         {
             if (string.IsNullOrEmpty(newName))
             {
-                return new ApiResponse(400, "لطفا نام جدید را وارد نمایید !");
+                return new FileManagerResult(400, "لطفا نام جدید را وارد نمایید !");
             }
 
             string pattern = @"^(\w+\.?)*\w+$";
 
             if (!Regex.IsMatch(newName, pattern))
             {
-                return new ApiResponse(400, "لطفا نام جدید را بصورت صحیح وارد نمایید !");
+                return new FileManagerResult(400, "لطفا نام جدید را بصورت صحیح وارد نمایید !");
             }
 
             if (string.IsNullOrEmpty(sourcePath))
             {
-                return new ApiResponse(400, "مسیر منبع معتبر نمی باشد !");
+                return new FileManagerResult(400, "مسیر منبع معتبر نمی باشد !");
             }
 
             var sourceFullPath = Path.Combine(_pathProvider.WebRootPath, sourcePath);
@@ -260,7 +260,7 @@ namespace FileManager.Services
             {
                 if (!System.IO.Directory.Exists(sourceFullPath))
                 {
-                    return new ApiResponse(400, "مسیر منبع معتبر نمی باشد !");
+                    return new FileManagerResult(400, "مسیر منبع معتبر نمی باشد !");
                 }
 
 
@@ -270,39 +270,39 @@ namespace FileManager.Services
             {
                 if (!System.IO.File.Exists(sourceFullPath))
                 {
-                    return new ApiResponse(400, "مسیر منبع معتبر نمی باشد !");
+                    return new FileManagerResult(400, "مسیر منبع معتبر نمی باشد !");
                 }
 
                 System.IO.File.Move(sourceFullPath, destinationPath);
             }
-            return new ApiOkResponse("ok");
+            return new FileManagerResult(200, "ok", true);
         }
 
-        public async Task<ApiResponse> UnzipAsync(string zipPath, string extractPath)
+        public async Task<FileManagerResult> UnzipAsync(string zipPath, string extractPath)
         {
             var extractFilePath = Path.Combine(_pathProvider.WebRootPath, extractPath);
             var zipFilePath = Path.Combine(_pathProvider.WebRootPath, zipPath);
 
             if (!System.IO.File.Exists(zipFilePath))
             {
-                return new ApiResponse(400, "فایلی یافت نشد !");
+                return new FileManagerResult(400, "فایلی یافت نشد !");
             }
 
             if (!Directory.Exists(extractFilePath))
             {
-                return new ApiResponse(400, "مسیر انتخابی پیدا نشد !");
+                return new FileManagerResult(400, "مسیر انتخابی پیدا نشد !");
             }
 
             ZipFile.ExtractToDirectory(zipFilePath, extractFilePath, true);
 
-            return new ApiOkResponse("ok");
+            return new FileManagerResult(200, "ok", true);
         }
 
-        public async Task<ApiResponse> UploadAsync(UploadFileManagerRequestModel request)
+        public async Task<FileManagerResult> UploadAsync(UploadFileManagerRequestModel request)
         {
             if (!request.Files.Any())
             {
-                return new ApiResponse(200, "ok");
+                return new FileManagerResult(200, "ok");
             }
 
             var path = Path.Combine(_pathProvider.WebRootPath, _rootPath);
@@ -320,7 +320,7 @@ namespace FileManager.Services
                     var fileExtension = Path.GetExtension(fileName);
                     if (!Enum.IsDefined(typeof(AllowExtensionsFileManager), fileExtension.TrimStart('.')))
                     {
-                        return new ApiResponse(400, "نوع فایل نامعتبر است");
+                        return new FileManagerResult(400, "نوع فایل نامعتبر است");
                     }
 
                     var filePath = Path.Combine(path, fileName);
@@ -336,10 +336,10 @@ namespace FileManager.Services
                 }
             }
 
-            return new ApiOkResponse("ok");
+            return new FileManagerResult(200, "ok", true);
         }
 
-        public async Task<ApiResponse> ZipAsync(FileZipRequestModel request)
+        public async Task<FileManagerResult> ZipAsync(FileZipRequestModel request)
         {
             var destinationZipPath = Path.Combine(_pathProvider.WebRootPath, request.DirectoryPath, request.FileZipName);
 
@@ -368,7 +368,7 @@ namespace FileManager.Services
                 }
             }
 
-            return new ApiOkResponse("ok");
+            return new FileManagerResult(200, "ok", true);
         }
 
         [NonAction]
