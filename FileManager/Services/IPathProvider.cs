@@ -1,4 +1,4 @@
-﻿namespace FileManager.Services
+﻿namespace FileManagerLite
 {
     public interface IPathProvider
     {

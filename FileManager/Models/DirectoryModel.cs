@@ -1,4 +1,4 @@
-﻿namespace FileManager.Models
+﻿namespace FileManagerLite.Models
 {
     public class DirectoryResponseDto
     {

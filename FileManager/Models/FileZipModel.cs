@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace FileManager.Models
+namespace FileManagerLite.Models
 {
     public class FileZipRequestModel
     {

@@ -1,4 +1,4 @@
-﻿namespace FileManager.Helpers
+﻿namespace FileManagerLite
 {
     public static class Extensions
     {

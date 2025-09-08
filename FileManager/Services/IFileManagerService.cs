@@ -1,9 +1,8 @@
-﻿using FileManager.Helpers;
-using FileManager.Models;
+﻿using FileManagerLite.Models;
 
 using Microsoft.AspNetCore.Mvc;
 
-namespace FileManager.Services
+namespace FileManagerLite
 {
     public interface IFileManagerService
     {

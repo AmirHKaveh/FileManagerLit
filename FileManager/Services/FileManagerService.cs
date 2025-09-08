@@ -1,5 +1,4 @@
-﻿using FileManager.Helpers;
-using FileManager.Models;
+﻿using FileManagerLite.Models;
 
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
@@ -8,7 +7,7 @@ using System.IO.Compression;
 using System.Text.RegularExpressions;
 using System.Web;
 
-namespace FileManager.Services
+namespace FileManagerLite
 {
     public class FileManagerService : IFileManagerService
     {
@@ -178,7 +177,7 @@ namespace FileManager.Services
                 Size = x.Length,
             }));
 
-            return new FileManagerResult(200, "ok", true);
+            return new FileManagerResult(200, "ok", true, result);
         }
 
         public async Task<FileManagerResult> MoveDirectoriesOrFilesAsync(List<string> sourcePaths, string destinationPath)
