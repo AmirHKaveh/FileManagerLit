@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFramework>net9.0</TargetFramework>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+
+		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
+		<PackageId>FileManager</PackageId>
+		<Version>1.0.0</Version>
+		<Authors>AmirHossein Kaveh</Authors>
+		<Company>ITSA</Company>
+		<Description>FileManager static files requests</Description>
+		<PackageTags>fileManager staticFiles</PackageTags>
+		<!--<PackageProjectUrl>https://github.com/AmirHKaveh/MindMapper.git</PackageProjectUrl>
+		<RepositoryUrl>https://github.com/AmirHKaveh/MindMapper.git</RepositoryUrl>-->
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
+		
+	</PropertyGroup>
+
+	<ItemGroup>
+		<PackageReference Include="Microsoft.AspNetCore.Hosting.Abstractions" Version="2.3.0" />
+		<PackageReference Include="Microsoft.AspNetCore.Mvc.Core" Version="2.3.0" />
+		<PackageReference Include="System.IO.Compression" Version="4.3.0" />
+		<PackageReference Include="System.IO.Compression.ZipFile" Version="4.3.0" />
+	</ItemGroup>
+
+
+</Project>
