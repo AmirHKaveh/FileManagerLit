@@ -60,9 +60,9 @@ Call actions in contoller:
     
          return response.StatusCode switch
          {
-             200 => Ok(new ApiOkResponse(response.Result)),
-             400 => BadRequest(new ApiResponse(400, response.Message)),
-             _ => StatusCode(500, new ApiResponse(500, response.Message))
+             200 => Ok(response.Result),
+             400 => BadRequest(400, response.Message),
+             _ => StatusCode(500, response.Message)
          };
      }
 }
