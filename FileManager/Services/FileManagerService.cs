@@ -163,7 +163,7 @@ namespace FileManagerLite
                 IsDirectory = (x.Attributes == FileAttributes.Directory ? true : false),
                 HasSubDirectories = (Directory.EnumerateDirectories(x.FullName).Any() ? true : false),
                 Name = x.Name,
-                Path = GetPath(x.FullName),
+                Path = GetAbsolutePath(x.FullName),
                 Size = 0,
             }).ToList();
 
@@ -173,7 +173,7 @@ namespace FileManagerLite
                 IsDirectory = (x.Attributes == FileAttributes.Directory ? true : false),
                 HasSubDirectories = false,
                 Name = x.Name,
-                Path = GetPath(x.FullName),
+                Path = GetAbsolutePath(x.FullName),
                 Size = x.Length,
             }));
 
@@ -443,11 +443,11 @@ namespace FileManagerLite
         }
 
         [NonAction]
-        public string GetPath(string fullName)
+        public string GetAbsolutePath(string fullName)
         {
             var uri = new Uri(fullName);
             var absolutePath = uri.AbsolutePath.ToLower();
-            var path = uri.AbsolutePath.Substring(absolutePath.IndexOf("files/"));
+            var path = uri.AbsolutePath.Substring(absolutePath.IndexOf($"{_rootPath.ToLower()}/"));
 
             return path;
         }
