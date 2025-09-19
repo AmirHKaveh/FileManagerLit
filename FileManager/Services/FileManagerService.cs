@@ -165,6 +165,7 @@ namespace FileManagerLite
                 Name = x.Name,
                 Path = GetAbsolutePath(x.FullName),
                 Size = 0,
+                SubscriptionsCount = Directory.EnumerateFiles(x.FullName).Count() + Directory.EnumerateDirectories(x.FullName).Count()
             }).ToList();
 
             result.AddRange(files.Select(x => new DirectoryResponseDto()
