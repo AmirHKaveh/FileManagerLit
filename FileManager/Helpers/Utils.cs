@@ -4,7 +4,7 @@ namespace FileManagerLite
 {
     public enum AllowExtensionsFileManager
     {
-        jpg, jpeg, gif, png, webp, txt, docx, pdf, zip, rar, mp3, mp4, mkv
+        jpg, jpeg, gif, png, webp, txt, docx, pdf, zip, rar, mp3, mp4, mkv, xlsx
     }
     public class FileManagerResult
     {

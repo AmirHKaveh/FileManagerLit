@@ -91,6 +91,10 @@ namespace FileManagerLite
 
         public async Task<FileManagerResult> DeleteDirectoriesOrFilesAsync(List<string> paths)
         {
+            if (paths.Any(x => x.TrimEnd('/').ToLower() == _rootPath.ToLower()))
+            {
+                return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
+            }
             foreach (var currentPath in paths)
             {
                 var fullPath = Path.Combine(_pathProvider.WebRootPath, currentPath);
@@ -98,13 +102,11 @@ namespace FileManagerLite
                 {
                     return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
                 }
-                var path = currentPath.GetSubstringToLastSlash();
                 if (!System.IO.File.Exists(fullPath) && !System.IO.Directory.Exists(fullPath))
                 {
                     return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
                 }
                 FileAttributes attr = System.IO.File.GetAttributes(fullPath);
-
 
                 if (attr.HasFlag(FileAttributes.Directory))
                 {
@@ -137,7 +139,7 @@ namespace FileManagerLite
             return (new FileManagerResult(200, "عملیات با موفقیت انجام شد", true), new FileStreamResult(stream, contentType));
         }
 
-        public async Task<FileManagerResult> GetDirectoriesAsync(string? currentPath)
+        public async Task<FileManagerResult> GetDirectoriesAsync(string? currentPath, FileManagerSearchRequest searchRequest = null)
         {
             var filePath = Path.Combine(_pathProvider.WebRootPath, _rootPath);
             if (!string.IsNullOrEmpty(currentPath))
@@ -154,29 +156,45 @@ namespace FileManagerLite
             {
                 return new FileManagerResult(400, "فولدری یافت نشد !");
             }
-            DirectoryInfo[] directories = objDirectoryInfo.GetDirectories();
-            var files = objDirectoryInfo.GetFiles();
 
-            var result = directories.Select(x => new DirectoryResponseDto()
+            var query = searchRequest.IsRecursive ?
+                objDirectoryInfo.EnumerateFileSystemInfos("*", SearchOption.AllDirectories).AsQueryable() :
+                objDirectoryInfo.EnumerateFileSystemInfos("*", SearchOption.TopDirectoryOnly).AsQueryable();
+
+            if (searchRequest is not null)
+            {
+                if (!string.IsNullOrEmpty(searchRequest.Keyword))
+                {
+                    query = query.Where(x => x.Name.Contains(searchRequest.Keyword, StringComparison.OrdinalIgnoreCase)).AsQueryable();
+                }
+                if (searchRequest.Extensions is not null && searchRequest.Extensions.Count > 0)
+                {
+                    var allowed = searchRequest.Extensions.Select(e => e.ToExtension()).ToArray();
+
+                    query = query.Where(x =>
+                       allowed.Contains(x.Extension, StringComparer.OrdinalIgnoreCase)).AsQueryable();
+                }
+            }
+
+            var allEntries = query
+                .OrderByDescending(x => (x.Attributes & FileAttributes.Directory) == FileAttributes.Directory)
+                .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                .ThenBy(x => x.LastWriteTime).ToList();
+
+            var result = allEntries.Select(x => new DirectoryResponseDto()
             {
                 DateModified = x.LastWriteTime,
-                IsDirectory = (x.Attributes == FileAttributes.Directory ? true : false),
-                HasSubDirectories = (Directory.EnumerateDirectories(x.FullName).Any() ? true : false),
+                IsDirectory = (x.Attributes & FileAttributes.Directory) == FileAttributes.Directory,
+                HasSubDirectories = (x.Attributes & FileAttributes.Directory) == FileAttributes.Directory
+                                    && Directory.EnumerateDirectories(x.FullName).Any(),
                 Name = x.Name,
-                Path = GetAbsolutePath(x.FullName),
-                Size = 0,
-                SubscriptionsCount = Directory.EnumerateFiles(x.FullName).Count() + Directory.EnumerateDirectories(x.FullName).Count()
+                Path = GetPath(x.FullName),
+                Size = (x is FileInfo fi ? fi.Length : 0),
+                SubscriptionsCount = (x.Attributes & FileAttributes.Directory) == FileAttributes.Directory
+                    ? Directory.EnumerateFiles(x.FullName).Count() + Directory.EnumerateDirectories(x.FullName).Count()
+                    : 0
             }).ToList();
 
-            result.AddRange(files.Select(x => new DirectoryResponseDto()
-            {
-                DateModified = x.LastWriteTime,
-                IsDirectory = (x.Attributes == FileAttributes.Directory ? true : false),
-                HasSubDirectories = false,
-                Name = x.Name,
-                Path = GetAbsolutePath(x.FullName),
-                Size = x.Length,
-            }));
 
             return new FileManagerResult(200, "ok", true, result);
         }
@@ -318,7 +336,7 @@ namespace FileManagerLite
                     var fileName = file.FileName;
 
                     var fileExtension = Path.GetExtension(fileName);
-                    if (!Enum.IsDefined(typeof(AllowExtensionsFileManager), fileExtension.TrimStart('.')))
+                    if (!Enum.IsDefined(typeof(AllowExtensionsFileManager), fileExtension.TrimStart('.').ToLower()))
                     {
                         return new FileManagerResult(400, "نوع فایل نامعتبر است");
                     }
@@ -444,7 +462,7 @@ namespace FileManagerLite
         }
 
         [NonAction]
-        public string GetAbsolutePath(string fullName)
+        public string GetPath(string fullName)
         {
             var uri = new Uri(fullName);
             var absolutePath = uri.AbsolutePath.ToLower();

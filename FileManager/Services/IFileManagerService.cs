@@ -6,7 +6,7 @@ namespace FileManagerLite
 {
     public interface IFileManagerService
     {
-        Task<FileManagerResult> GetDirectoriesAsync(string? currentPath);
+        Task<FileManagerResult> GetDirectoriesAsync(string? currentPath, FileManagerSearchRequest searchRequest = null);
         Task<FileManagerResult> CreateNewDirectoryAsync(string? currentPath, string directoryName);
         Task<FileManagerResult> RenameDirectoryOrFileAsync(string sourcePath, string newName);
         Task<FileManagerResult> DeleteDirectoriesOrFilesAsync(List<string> paths);
