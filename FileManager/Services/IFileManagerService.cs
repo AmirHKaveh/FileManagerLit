@@ -9,7 +9,7 @@ namespace FileManagerLite
         Task<FileManagerResult> GetDirectoriesAsync(string? currentPath, FileManagerSearchRequest searchRequest = null);
         Task<FileManagerResult> CreateNewDirectoryAsync(string? currentPath, string directoryName);
         Task<FileManagerResult> RenameDirectoryOrFileAsync(string sourcePath, string newName);
-        Task<FileManagerResult> DeleteDirectoriesOrFilesAsync(List<string> paths);
+        Task<FileManagerResult> DeleteDirectoriesOrFilesAsync(List<string> paths,bool isPermanent=false);
         Task<FileManagerResult> CopyDirectoriesOrFilesAsync(List<string> sourcePaths, string destinationPath);
         Task<FileManagerResult> MoveDirectoriesOrFilesAsync(List<string> sourcePaths, string destinationPath);
         Task<FileManagerResult> UploadAsync(UploadFileManagerRequestModel request);

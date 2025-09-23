@@ -89,32 +89,59 @@ namespace FileManagerLite
             return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
-        public async Task<FileManagerResult> DeleteDirectoriesOrFilesAsync(List<string> paths)
+        public async Task<FileManagerResult> DeleteDirectoriesOrFilesAsync(List<string> paths, bool isPermanent = false)
         {
             if (paths.Any(x => x.TrimEnd('/').ToLower() == _rootPath.ToLower()))
             {
                 return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
             }
-            foreach (var currentPath in paths)
-            {
-                var fullPath = Path.Combine(_pathProvider.WebRootPath, currentPath);
-                if (string.IsNullOrEmpty(currentPath))
-                {
-                    return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
-                }
-                if (!System.IO.File.Exists(fullPath) && !System.IO.Directory.Exists(fullPath))
-                {
-                    return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
-                }
-                FileAttributes attr = System.IO.File.GetAttributes(fullPath);
 
-                if (attr.HasFlag(FileAttributes.Directory))
+            var trashPath = Path.Combine(_pathProvider.WebRootPath, "Trash");
+            if (!Directory.Exists(trashPath))
+            {
+                Directory.CreateDirectory(trashPath);
+            }
+
+            if (isPermanent)
+            {
+                foreach (var currentPath in paths)
                 {
-                    Directory.Delete(fullPath, true);
+                    var fullPath = Path.Combine(_pathProvider.WebRootPath, currentPath);
+                    if (string.IsNullOrEmpty(currentPath))
+                    {
+                        return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
+                    }
+                    if (!System.IO.File.Exists(fullPath) && !System.IO.Directory.Exists(fullPath))
+                    {
+                        return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
+                    }
+                    FileAttributes attr = System.IO.File.GetAttributes(fullPath);
+
+                    if (attr.HasFlag(FileAttributes.Directory))
+                    {
+                        Directory.Delete(fullPath, true);
+                    }
+                    else
+                    {
+                        System.IO.File.Delete(fullPath);
+                    }
                 }
-                else
+            }
+            else
+            {
+                foreach (var currentPath in paths)
                 {
-                    System.IO.File.Delete(fullPath);
+                    var fullPath = Path.Combine(_pathProvider.WebRootPath, currentPath);
+                    if (string.IsNullOrEmpty(currentPath))
+                    {
+                        return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
+                    }
+                    if (!System.IO.File.Exists(fullPath) && !System.IO.Directory.Exists(fullPath))
+                    {
+                        return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
+                    }
+                    MoveToTrash(fullPath, trashPath);
+
                 }
             }
             return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
@@ -487,7 +514,37 @@ namespace FileManagerLite
                 System.IO.File.Move(sourcePath, destinationPath, overwrite: true);
             }
         }
+        [NonAction]
+        public void MoveToTrash(string sourcePath, string trashPath)
+        {
+            if (IsDirectory(sourcePath))
+            {
+                // Move the directory itself into Trash
+                var dirName = Path.GetFileName(sourcePath);
+                var destination = Path.Combine(trashPath, dirName);
 
+                // Ensure destination does not exist (otherwise Directory.Move fails)
+                if (Directory.Exists(destination))
+                {
+                    Directory.Delete(destination, true);
+                }
+
+                Directory.Move(sourcePath, destination);
+            }
+            else
+            {
+                // Move file into Trash
+                var fileName = Path.GetFileName(sourcePath);
+                var destination = Path.Combine(trashPath, fileName);
+
+                if (File.Exists(destination))
+                {
+                    File.Delete(destination);
+                }
+
+                File.Move(sourcePath, destination);
+            }
+        }
         [NonAction]
         private void AddDirectoryToZip(ZipArchive archive, string sourceDir, string entryName)
         {
