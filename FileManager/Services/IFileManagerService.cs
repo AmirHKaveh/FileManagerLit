@@ -1,5 +1,7 @@
 ﻿using FileManagerLite.Models;
 
+using FileManagerLiteUsage.Models;
+
 using Microsoft.AspNetCore.Mvc;
 
 namespace FileManagerLite
@@ -16,5 +18,7 @@ namespace FileManagerLite
         Task<(FileManagerResult, FileStreamResult)> DownloadAsync(string path);
         Task<FileManagerResult> ZipAsync(FileZipRequestModel request);
         Task<FileManagerResult> UnzipAsync(string zipPath, string extractPath);
+
+        Task<ResizeResponseModel> Resizer(ResizeRequestModel request);
     }
 }

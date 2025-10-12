@@ -41,5 +41,26 @@
                 _ => throw new ArgumentOutOfRangeException(nameof(ext), ext, null)
             };
         }
+
+        public static string GetMimeType(AllowExtensionsFileManager extension)
+        {
+            return extension switch
+            {
+                AllowExtensionsFileManager.jpg => "image/jpeg",
+                AllowExtensionsFileManager.jpeg => "image/jpeg",
+                AllowExtensionsFileManager.gif => "image/gif",
+                AllowExtensionsFileManager.png => "image/png",
+                AllowExtensionsFileManager.webp => "image/webp",
+                AllowExtensionsFileManager.txt => "text/plain",
+                AllowExtensionsFileManager.docx => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+                AllowExtensionsFileManager.pdf => "application/pdf",
+                AllowExtensionsFileManager.zip => "application/zip",
+                AllowExtensionsFileManager.rar => "application/x-rar-compressed",
+                AllowExtensionsFileManager.mp3 => "audio/mpeg",
+                AllowExtensionsFileManager.mp4 => "video/mp4",
+                AllowExtensionsFileManager.mkv => "video/x-matroska",
+                _ => "application/octet-stream"
+            };
+        }
     }
 }

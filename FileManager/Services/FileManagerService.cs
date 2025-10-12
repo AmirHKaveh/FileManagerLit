@@ -1,5 +1,7 @@
 ﻿using FileManagerLite.Models;
 
+using FileManagerLiteUsage.Models;
+
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
@@ -414,6 +416,58 @@ namespace FileManagerLite
             }
 
             return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
+        }
+
+        public async Task<ResizeResponseModel> Resizer(ResizeRequestModel request)
+        {
+            var resizeParams = new ResizeParams()
+            {
+                w = request.Width,
+                h = request.Height,
+                mode = request?.Mode,
+            };
+
+            var filePath = Path.Combine(_pathProvider.WebRootPath, request.ImagePath);
+            if (!File.Exists(filePath))
+            {
+                return new ResizeResponseModel(400, "فایلی یافت نشد !");
+
+            }
+            byte[] bytes = null;
+            using (var outputStream = new MemoryStream())
+            {
+                if (string.Equals(resizeParams.mode, "crop", StringComparison.OrdinalIgnoreCase))
+                {
+                    bytes = FileManipulation.CropImage
+                        (
+                            filePath,
+                            resizeParams.w,
+                            resizeParams.h
+                        );
+                }
+                else if (string.Equals(resizeParams.mode, "stretch", StringComparison.OrdinalIgnoreCase))
+                {
+                    bytes = FileManipulation.StretchImage
+                        (
+                            filePath,
+                            resizeParams.w,
+                            resizeParams.h
+                        );
+                }
+                else
+                {
+                    bytes = File.ReadAllBytes(filePath);
+                }
+                var extension = Path.GetExtension(filePath);
+                var fileName = Path.GetFileName(filePath);
+
+                Enum.TryParse(extension, out AllowExtensionsFileManager allowExtension);
+                var contentType = Extensions.GetMimeType(allowExtension);
+
+                var fileResponse = new ResizeFileResponseModel() { ContentData = bytes, ContentType = contentType, FileName = fileName };
+
+                return (new ResizeResponseModel(200, "ok", fileResponse));
+            }
         }
 
         [NonAction]
