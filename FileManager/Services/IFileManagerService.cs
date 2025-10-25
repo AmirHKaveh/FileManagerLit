@@ -6,7 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace FileManagerLite
 {
-    public interface IFileManagerService
+    public interface IFileManagerService 
     {
         Task<FileManagerResult> GetDirectoriesAsync(string? currentPath, FileManagerSearchRequest searchRequest = null);
         Task<FileManagerResult> CreateNewDirectoryAsync(string? currentPath, string directoryName);

@@ -358,6 +358,7 @@ namespace FileManagerLite
                 path = Path.Combine(_pathProvider.WebRootPath, request.CurrentPath.TrimEnd('/'));
             }
 
+            var paths = new List<string>();
             foreach (var file in request.Files)
             {
                 if (file.Length > 0)
@@ -380,10 +381,12 @@ namespace FileManagerLite
                     {
                         await file.CopyToAsync(stream);
                     }
+
+                    paths.Add(string.Format("{0}/{1}{2}", request.CurrentPath, nameWithoutExt, extension));
                 }
             }
 
-            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
+            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true, paths);
         }
 
         public async Task<FileManagerResult> ZipAsync(FileZipRequestModel request)
