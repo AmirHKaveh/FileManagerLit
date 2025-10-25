@@ -8,6 +8,7 @@ It provides a clean API for common file system operations such as:
 - Creating directories
 - Deleting files and directories
 - Search by keyword and extension type in directories
+- Resize image (stretch & crop by SkiaSharp package)
 - Other essential file system utilities
 
 Designed for developers who need a simple, reusable, and dependency-free solution for file operations across projects.
