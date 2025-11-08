@@ -62,5 +62,10 @@
                 _ => "application/octet-stream"
             };
         }
+
+        public static string GenerateFileName()
+        {
+            return $"{DateTime.Now.Year}{DateTime.Now.Month}{DateTime.Now.Day}{DateTime.Now.Hour}{DateTime.Now.Minute}{DateTime.Now.Second}{DateTime.Now.Millisecond}";
+        }
     }
 }

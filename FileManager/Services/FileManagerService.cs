@@ -168,7 +168,7 @@ namespace FileManagerLite
             return (new FileManagerResult(200, "عملیات با موفقیت انجام شد", true), new FileStreamResult(stream, contentType));
         }
 
-        public async Task<FileManagerResult> GetDirectoriesAsync(string? currentPath, FileManagerSearchRequest searchRequest = null)
+        public async Task<DirectoryFileManagerResponseModel> GetDirectoriesAsync(string? currentPath, FileManagerSearchRequest searchRequest = null)
         {
             var filePath = Path.Combine(_pathProvider.WebRootPath, _rootPath);
             if (!string.IsNullOrEmpty(currentPath))
@@ -179,11 +179,11 @@ namespace FileManagerLite
             DirectoryInfo objDirectoryInfo = new DirectoryInfo(filePath);
             if (!Path.Exists(filePath))
             {
-                return new FileManagerResult(400, "مسیری یافت نشد !");
+                return new DirectoryFileManagerResponseModel(400, "مسیری یافت نشد !");
             }
             if (!objDirectoryInfo.Exists)
             {
-                return new FileManagerResult(400, "فولدری یافت نشد !");
+                return new DirectoryFileManagerResponseModel(400, "فولدری یافت نشد !");
             }
 
             var query = searchRequest.IsRecursive ?
@@ -225,7 +225,7 @@ namespace FileManagerLite
             }).ToList();
 
 
-            return new FileManagerResult(200, "ok", true, result);
+            return new DirectoryFileManagerResponseModel(200, "ok", true, result);
         }
 
         public async Task<FileManagerResult> MoveDirectoriesOrFilesAsync(List<string> sourcePaths, string destinationPath)
@@ -345,11 +345,11 @@ namespace FileManagerLite
             return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
         }
 
-        public async Task<FileManagerResult> UploadAsync(UploadFileManagerRequestModel request)
+        public async Task<UploadFilesManagerResponseModel> UploadFilesAsync(UploadFilesManagerRequestModel request)
         {
             if (!request.Files.Any())
             {
-                return new FileManagerResult(200, "عملیات با موفقیت انجام شد");
+                return new UploadFilesManagerResponseModel(400, "فایلی انتخاب نشده است !");
             }
 
             var path = Path.Combine(_pathProvider.WebRootPath, _rootPath);
@@ -357,8 +357,7 @@ namespace FileManagerLite
             {
                 path = Path.Combine(_pathProvider.WebRootPath, request.CurrentPath.TrimEnd('/'));
             }
-
-            var paths = new List<string>();
+            var fileAddresses = new List<string>();
             foreach (var file in request.Files)
             {
                 if (file.Length > 0)
@@ -368,27 +367,65 @@ namespace FileManagerLite
                     var fileExtension = Path.GetExtension(fileName);
                     if (!Enum.IsDefined(typeof(AllowExtensionsFileManager), fileExtension.TrimStart('.').ToLower()))
                     {
-                        return new FileManagerResult(400, "نوع فایل نامعتبر است");
+                        return new UploadFilesManagerResponseModel(400, "نوع فایل نامعتبر است");
                     }
 
                     var filePath = Path.Combine(path, fileName);
                     var (nameWithoutExt, extension) = GetFileNameParts(fileName);
                     var basePath = GetBasePath(path);
-                    var uniqueDirectoryName = GetUniqueFileName(basePath, nameWithoutExt, extension);
+                    var newFileName = request.IsRandomFileName ? Extensions.GenerateFileName() : nameWithoutExt;
+                    var uniqueDirectoryName = GetUniqueFileName(basePath, newFileName, extension);
                     filePath = Path.Combine(basePath, uniqueDirectoryName);
-
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
                     }
-
-                    paths.Add(string.Format("{0}/{1}{2}", request.CurrentPath, nameWithoutExt, extension));
+                    fileAddresses.Add(string.Format("{0}/{1}{2}", request.CurrentPath, newFileName, extension));
                 }
             }
 
-            return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true, paths);
+            return new UploadFilesManagerResponseModel(statusCode: 200, message: "عملیات با موفقیت انجام شد", isSucceed: true, filePaths: fileAddresses);
         }
 
+        public async Task<UploadFileManagerResponseModel> UploadFileAsync(UploadFileManagerRequestModel request)
+        {
+            if (request.File is null)
+            {
+                return new UploadFileManagerResponseModel(400, "فایلی انتخاب نشده است !");
+            }
+
+            var path = Path.Combine(_pathProvider.WebRootPath, _rootPath);
+            if (!string.IsNullOrEmpty(request.CurrentPath.TrimEnd('/')))
+            {
+                path = Path.Combine(_pathProvider.WebRootPath, request.CurrentPath.TrimEnd('/'));
+            }
+
+            var fileAddress = "";
+            if (request.File.Length > 0)
+            {
+                var fileName = request.File.FileName;
+
+                var fileExtension = Path.GetExtension(fileName);
+                if (!Enum.IsDefined(typeof(AllowExtensionsFileManager), fileExtension.TrimStart('.').ToLower()))
+                {
+                    return new UploadFileManagerResponseModel(400, "نوع فایل نامعتبر است");
+                }
+
+                var filePath = Path.Combine(path, fileName);
+                var (nameWithoutExt, extension) = GetFileNameParts(fileName);
+                var basePath = GetBasePath(path);
+                var newFileName = request.IsRandomFileName ? Extensions.GenerateFileName() : nameWithoutExt;
+                var uniqueDirectoryName = GetUniqueFileName(basePath, newFileName, extension);
+                filePath = Path.Combine(basePath, uniqueDirectoryName);
+                using (var stream = new FileStream(filePath, FileMode.Create))
+                {
+                    await request.File.CopyToAsync(stream);
+                }
+                fileAddress = string.Format("{0}/{1}{2}", request.CurrentPath, newFileName, extension);
+            }
+
+            return new UploadFileManagerResponseModel(statusCode: 200, message: "عملیات با موفقیت انجام شد", isSucceed: true, filePath: fileAddress);
+        }
         public async Task<FileManagerResult> ZipAsync(FileZipRequestModel request)
         {
             var destinationZipPath = Path.Combine(_pathProvider.WebRootPath, request.DirectoryPath, request.FileZipName);
