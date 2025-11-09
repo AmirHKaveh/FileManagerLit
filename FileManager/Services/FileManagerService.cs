@@ -5,6 +5,7 @@ using FileManagerLiteUsage.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 
+using System.IO;
 using System.IO.Compression;
 using System.Text.RegularExpressions;
 using System.Web;
@@ -32,6 +33,19 @@ namespace FileManagerLite
             if (string.IsNullOrEmpty(destinationPath))
             {
                 return new FileManagerResult(400, "مسیر مقصد معتبر نمی باشد !");
+            }
+
+
+            var isValidSourcePath = CheckRootPath(sourcePaths, _rootPath);
+            if (!isValidSourcePath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مبدا مجاز نمی باشد");
+            }
+
+            var isValidPath = CheckRootPath(destinationPath, _rootPath);
+            if (!isValidPath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مقصد مجاز نمی باشد");
             }
 
             var destinationDirectoryPath = Path.Combine(_pathProvider.WebRootPath, destinationPath);
@@ -72,6 +86,14 @@ namespace FileManagerLite
         {
             string folderNamePattern = @"^([\w-]+\.?)*[\w-]+$";
 
+            if (!string.IsNullOrEmpty(currentPath))
+            {
+                var isValidPath = CheckRootPath(currentPath, _rootPath);
+                if (!isValidPath.Item1)
+                {
+                    return new FileManagerResult(403, "مسیر درخواستی مجاز نمی باشد");
+                }
+            }
             if (string.IsNullOrEmpty(directoryName))
             {
                 return new FileManagerResult(400, "لطفا نام فولدر را وارد نمایید !");
@@ -96,6 +118,12 @@ namespace FileManagerLite
             if (paths.Any(x => x.TrimEnd('/').ToLower() == _rootPath.ToLower()))
             {
                 return new FileManagerResult(400, "مسیر فایل معتبر نمی باشد");
+            }
+
+            var isValidSourcePath = CheckRootPath(paths, _rootPath);
+            if (!isValidSourcePath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیرهای درخواستی مجاز نمی باشد");
             }
 
             var trashPath = Path.Combine(_pathProvider.WebRootPath, "Trash");
@@ -173,6 +201,12 @@ namespace FileManagerLite
             var filePath = Path.Combine(_pathProvider.WebRootPath, _rootPath);
             if (!string.IsNullOrEmpty(currentPath))
             {
+                var isValidPath = CheckRootPath(currentPath, _rootPath);
+                if (!isValidPath.Item1)
+                {
+                    return new DirectoryFileManagerResponseModel(403, "مسیر درخواستی مجاز نمی باشد");
+                }
+
                 filePath = Path.Combine(_pathProvider.WebRootPath, currentPath);
             }
 
@@ -240,6 +274,18 @@ namespace FileManagerLite
                 return new FileManagerResult(400, "مسیر مقصد معتبر نمی باشد!");
             }
 
+            var isValidSourcePath = CheckRootPath(sourcePaths, _rootPath);
+            if (!isValidSourcePath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مبدا مجاز نمی باشد");
+            }
+
+            var isValidPath = CheckRootPath(destinationPath, _rootPath);
+            if (!isValidPath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مقصد مجاز نمی باشد");
+            }
+
             var rootPath = _pathProvider.WebRootPath;
             var destinationRoot = Path.Combine(rootPath, destinationPath);
 
@@ -294,6 +340,13 @@ namespace FileManagerLite
                 return new FileManagerResult(400, "مسیر منبع معتبر نمی باشد !");
             }
 
+            var isValidPath = CheckRootPath(sourcePath, _rootPath);
+            if (!isValidPath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مجاز نمی باشد");
+            }
+
+
             var sourceFullPath = Path.Combine(_pathProvider.WebRootPath, sourcePath);
             var path = sourcePath.GetSubstringToLastSlash();
             var newPath = Path.Combine(path, newName);
@@ -340,6 +393,18 @@ namespace FileManagerLite
                 return new FileManagerResult(400, "مسیر انتخابی پیدا نشد !");
             }
 
+            var isValidPath = CheckRootPath(zipPath, _rootPath);
+            if (!isValidPath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مجاز نمی باشد");
+            }
+
+            var isValidExtractPath = CheckRootPath(extractPath, _rootPath);
+            if (!isValidExtractPath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مجاز نمی باشد");
+            }
+
             ZipFile.ExtractToDirectory(zipFilePath, extractFilePath, true);
 
             return new FileManagerResult(200, "عملیات با موفقیت انجام شد", true);
@@ -351,20 +416,35 @@ namespace FileManagerLite
             {
                 return new UploadFilesManagerResponseModel(400, "فایلی انتخاب نشده است !");
             }
+            if (!string.IsNullOrEmpty(request.CurrentPath))
+            {
+                var isValidPath = CheckRootPath(request.CurrentPath, _rootPath);
+                if (!isValidPath.Item1)
+                {
+                    return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مجاز نمی باشد");
+                }
+            }
 
             var path = Path.Combine(_pathProvider.WebRootPath, _rootPath);
-            if (!string.IsNullOrEmpty(request.CurrentPath.TrimEnd('/')))
+            if (!string.IsNullOrEmpty(request.CurrentPath?.TrimEnd('/')))
             {
                 path = Path.Combine(_pathProvider.WebRootPath, request.CurrentPath.TrimEnd('/'));
             }
+
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
+
             var fileAddresses = new List<string>();
+
             foreach (var file in request.Files)
             {
                 if (file.Length > 0)
                 {
                     var fileName = file.FileName;
-
                     var fileExtension = Path.GetExtension(fileName);
+
                     if (!Enum.IsDefined(typeof(AllowExtensionsFileManager), fileExtension.TrimStart('.').ToLower()))
                     {
                         return new UploadFilesManagerResponseModel(400, "نوع فایل نامعتبر است");
@@ -373,20 +453,27 @@ namespace FileManagerLite
                     var filePath = Path.Combine(path, fileName);
                     var (nameWithoutExt, extension) = GetFileNameParts(fileName);
                     var basePath = GetBasePath(path);
+
                     var newFileName = request.IsRandomFileName ? Extensions.GenerateFileName() : nameWithoutExt;
                     var uniqueDirectoryName = GetUniqueFileName(basePath, newFileName, extension);
                     filePath = Path.Combine(basePath, uniqueDirectoryName);
+
                     using (var stream = new FileStream(filePath, FileMode.Create))
                     {
                         await file.CopyToAsync(stream);
                     }
-                    fileAddresses.Add(string.Format("{0}/{1}{2}", request.CurrentPath, newFileName, extension));
+
+                    fileAddresses.Add($"{request.CurrentPath}/{newFileName}{extension}");
                 }
             }
 
-            return new UploadFilesManagerResponseModel(statusCode: 200, message: "عملیات با موفقیت انجام شد", isSucceed: true, filePaths: fileAddresses);
+            return new UploadFilesManagerResponseModel(
+                statusCode: 200,
+                message: "عملیات با موفقیت انجام شد",
+                isSucceed: true,
+                filePaths: fileAddresses
+            );
         }
-
         public async Task<UploadFileManagerResponseModel> UploadFileAsync(UploadFileManagerRequestModel request)
         {
             if (request.File is null)
@@ -394,12 +481,24 @@ namespace FileManagerLite
                 return new UploadFileManagerResponseModel(400, "فایلی انتخاب نشده است !");
             }
 
+            if (!string.IsNullOrEmpty(request.CurrentPath))
+            {
+                var isValidPath = CheckRootPath(request.CurrentPath, _rootPath);
+                if (!isValidPath.Item1)
+                {
+                    return new UploadFileManagerResponseModel(403, "مسیر درخواستی مجاز نمی باشد");
+                }
+            }
+
             var path = Path.Combine(_pathProvider.WebRootPath, _rootPath);
             if (!string.IsNullOrEmpty(request.CurrentPath.TrimEnd('/')))
             {
                 path = Path.Combine(_pathProvider.WebRootPath, request.CurrentPath.TrimEnd('/'));
             }
-
+            if (!Directory.Exists(path))
+            {
+                Directory.CreateDirectory(path);
+            }
             var fileAddress = "";
             if (request.File.Length > 0)
             {
@@ -433,6 +532,12 @@ namespace FileManagerLite
             if (System.IO.File.Exists(destinationZipPath))
             {
                 System.IO.File.Delete(destinationZipPath);
+            }
+
+            var isValidPath = CheckRootPath(request.DirectoryPath, _rootPath);
+            if (!isValidPath.Item1)
+            {
+                return new UploadFilesManagerResponseModel(403, "مسیر درخواستی مجاز نمی باشد");
             }
 
             using (FileStream zipToOpen = new FileStream(destinationZipPath, FileMode.Create))
@@ -648,6 +753,31 @@ namespace FileManagerLite
                 string entryPath = Path.Combine(entryName, relativePath).Replace("\\", "/");
                 archive.CreateEntryFromFile(filePath, entryPath);
             }
+        }
+        [NonAction]
+        private (bool, string) CheckRootPath(string path, string rootPath)
+        {
+            var parts = path.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar);
+
+            bool isValidPath = Array.Exists(parts, part => part.Equals(_rootPath, StringComparison.OrdinalIgnoreCase));
+            if (!isValidPath)
+            {
+                return (false, "notAllow");
+            }
+            return (true, "ok");
+        }
+        [NonAction]
+        private (bool, string) CheckRootPath(List<string> paths, string rootPath)
+        {
+            bool isValidPath = paths.All(p =>
+            p.Split(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar)
+             .Any(part => part.Equals(_rootPath, StringComparison.OrdinalIgnoreCase)));
+
+            if (!isValidPath)
+            {
+                return (false, "notAllow");
+            }
+            return (true, "ok");
         }
 
         [NonAction]

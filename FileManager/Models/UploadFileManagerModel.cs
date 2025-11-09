@@ -5,14 +5,24 @@ namespace FileManagerLite.Models
     public class UploadFilesManagerRequestModel
     {
         public List<IFormFile> Files { get; set; }
-        public string CurrentPath { get; set; }
+        private string? _currentPath;
+        public string CurrentPath
+        {
+            get => _currentPath ?? "";
+            set => _currentPath = value?.TrimStart('/', '\\');
+        }
         public bool IsRandomFileName { get; set; } = false;
     }
 
     public class UploadFileManagerRequestModel
     {
         public IFormFile File { get; set; }
-        public string CurrentPath { get; set; }
+        private string? _currentPath;
+        public string CurrentPath
+        {
+            get => _currentPath ?? "";
+            set => _currentPath = value?.TrimStart('/', '\\');
+        }
         public bool IsRandomFileName { get; set; } = false;
     }
 

@@ -24,7 +24,7 @@
     {
         public string? Keyword { get; set; }
         public List<AllowExtensionsFileManager>? Extensions { get; set; }
-        public bool IsRecursive { get; set; } = true;
+        public bool IsRecursive { get; set; } = false;
     }
 
 }
