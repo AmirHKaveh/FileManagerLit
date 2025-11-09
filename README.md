@@ -62,7 +62,7 @@ Call actions in contoller:
     
          return response.StatusCode switch
          {
-             200 => Ok(response.Result),
+             200 => Ok(response.Directories),
              400 => BadRequest(response.Message),
              _ => StatusCode(500, response.Message)
          };
