@@ -251,7 +251,7 @@ namespace FileManagerLite
                 HasSubDirectories = (x.Attributes & FileAttributes.Directory) == FileAttributes.Directory
                                     && Directory.EnumerateDirectories(x.FullName).Any(),
                 Name = x.Name,
-                Path = GetPath(x.FullName),
+                Path = GetRelativePath(x.FullName),
                 Size = (x is FileInfo fi ? fi.Length : 0),
                 SubscriptionsCount = (x.Attributes & FileAttributes.Directory) == FileAttributes.Directory
                     ? Directory.EnumerateFiles(x.FullName).Count() + Directory.EnumerateDirectories(x.FullName).Count()
@@ -688,13 +688,12 @@ namespace FileManagerLite
         }
 
         [NonAction]
-        public string GetPath(string fullName)
+        public string GetRelativePath(string fullName)
         {
-            var uri = new Uri(fullName);
-            var absolutePath = uri.AbsolutePath.ToLower();
-            var path = uri.AbsolutePath.Substring(absolutePath.IndexOf($"{_rootPath.ToLower()}/"));
+            string relativePath = Path.GetRelativePath(_pathProvider.WebRootPath, fullName)
+              .Replace("\\", "/");
 
-            return path;
+            return relativePath;
         }
 
         [NonAction]
