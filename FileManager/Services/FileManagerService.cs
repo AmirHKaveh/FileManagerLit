@@ -789,6 +789,7 @@ namespace FileManagerLite
                 AllowExtensionsFileManager.gif => "image/gif",
                 AllowExtensionsFileManager.png => "image/png",
                 AllowExtensionsFileManager.webp => "image/webp",
+                AllowExtensionsFileManager.svg => "image/svg+xml",
                 AllowExtensionsFileManager.txt => "text/plain",
                 AllowExtensionsFileManager.docx => "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
                 AllowExtensionsFileManager.pdf => "application/pdf",
