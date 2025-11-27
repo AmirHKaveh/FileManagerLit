@@ -12,6 +12,7 @@ namespace FileManagerLite.Models
             set => _currentPath = value?.TrimStart('/', '\\');
         }
         public bool IsRandomFileName { get; set; } = false;
+        public bool OutOfContext { get; set; } = false;
     }
 
     public class UploadFileManagerRequestModel
@@ -24,6 +25,7 @@ namespace FileManagerLite.Models
             set => _currentPath = value?.TrimStart('/', '\\');
         }
         public bool IsRandomFileName { get; set; } = false;
+        public bool OutOfContext { get; set; } = false;
     }
 
     public class UploadFileManagerResponseModel : FileManagerResult

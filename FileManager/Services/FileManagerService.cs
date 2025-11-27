@@ -416,7 +416,7 @@ namespace FileManagerLite
             {
                 return new UploadFilesManagerResponseModel(400, "فایلی انتخاب نشده است !");
             }
-            if (!string.IsNullOrEmpty(request.CurrentPath))
+            if (!string.IsNullOrEmpty(request.CurrentPath) && !request.OutOfContext)
             {
                 var isValidPath = CheckRootPath(request.CurrentPath, _rootPath);
                 if (!isValidPath.Item1)
@@ -481,7 +481,7 @@ namespace FileManagerLite
                 return new UploadFileManagerResponseModel(400, "فایلی انتخاب نشده است !");
             }
 
-            if (!string.IsNullOrEmpty(request.CurrentPath))
+            if (!string.IsNullOrEmpty(request.CurrentPath) && !request.OutOfContext)
             {
                 var isValidPath = CheckRootPath(request.CurrentPath, _rootPath);
                 if (!isValidPath.Item1)
