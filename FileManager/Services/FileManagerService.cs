@@ -585,7 +585,66 @@ namespace FileManagerLite
 
             return new UploadFileManagerResponseModel(200, "عملیات با موفقیت انجام شد", true, fileAddress);
         }
-        
+
+        public DirectoryFileManagerResponseModel GetTrashDirectories(string? currentPath, FileManagerSearchRequest? searchRequest = null)
+        {
+            var filePath = Path.Combine(_pathProvider.WebRootPath, _trashRootPath);
+            if (!string.IsNullOrEmpty(currentPath))
+                filePath = Path.Combine(_pathProvider.WebRootPath, currentPath);
+
+
+            DirectoryInfo objDirectoryInfo = new DirectoryInfo(filePath);
+            if (!Path.Exists(filePath))
+            {
+                return new DirectoryFileManagerResponseModel(400, "مسیری یافت نشد !");
+            }
+            if (!objDirectoryInfo.Exists)
+            {
+                return new DirectoryFileManagerResponseModel(400, "فولدری یافت نشد !");
+            }
+
+            var result = GenerateDirectoriesAndFiles(objDirectoryInfo, searchRequest);
+
+
+            return new DirectoryFileManagerResponseModel(200, "ok", true, result);
+        }
+        public FileManagerResult RestoreFromTrash(string trashRelativePath, string restorePath)
+        {
+            try
+            {
+                var root = _pathProvider.WebRootPath;
+                var trashPath = Path.Combine(root, trashRelativePath);
+                var targetPath = Path.Combine(root, restorePath, Path.GetFileName(trashRelativePath));
+
+                if (!File.Exists(trashPath) && !Directory.Exists(trashPath))
+                    return new FileManagerResult(400, "فایل یا فولدر در Trash یافت نشد");
+
+                var fullTargetPath = Path.GetFullPath(targetPath);
+                if (!fullTargetPath.StartsWith(root))
+                    return new FileManagerResult(403, "مسیر بازیابی غیرمجاز است");
+
+                var targetDir = Path.GetDirectoryName(fullTargetPath);
+                if (!Directory.Exists(targetDir))
+                    Directory.CreateDirectory(targetDir);
+
+                if (Directory.Exists(trashPath))
+                {
+                    Directory.Move(trashPath, fullTargetPath);
+                }
+                else
+                {
+                    File.Move(trashPath, fullTargetPath);
+                }
+
+                return new FileManagerResult(200, "فایل/فولدر با موفقیت بازیابی شد", true);
+            }
+            catch (Exception ex)
+            {
+                return new FileManagerResult(500, $"خطا در بازیابی فایل/فولدر: {ex.Message}");
+            }
+        }
+
+
         public ResizeResponseModel Resizer(ResizeRequestModel request)
         {
             var resizeParams = new ResizeParams()

@@ -7,7 +7,7 @@
 
 		<GeneratePackageOnBuild>true</GeneratePackageOnBuild>
 		<PackageId>FileManagerLite</PackageId>
-		<Version>2.5.0</Version>
+		<Version>2.6.0</Version>
 		<Authors>AmirHossein Kaveh</Authors>
 		<Company>ITSA</Company>
 		<Description>for managing files and directories with support for copy, move, delete, upload , download , zip , unZip , get directories , and create operations.</Description>

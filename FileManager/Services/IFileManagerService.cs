@@ -9,11 +9,13 @@ namespace FileManagerLite
     public interface IFileManagerService 
     {
         DirectoryFileManagerResponseModel GetDirectories(string? currentPath, FileManagerSearchRequest searchRequest = null);
+        DirectoryFileManagerResponseModel GetTrashDirectories(string? currentPath, FileManagerSearchRequest? searchRequest = null);
         FileManagerResult CreateNewDirectory(string? currentPath, string directoryName);
         FileManagerResult RenameDirectoryOrFile(string sourcePath, string newName);
         FileManagerResult DeleteDirectoriesOrFiles(List<string> paths, bool isPermanent = false);
         FileManagerResult CopyDirectoriesOrFiles(List<string> sourcePaths, string destinationPath);
         FileManagerResult MoveDirectoriesOrFiles(List<string> sourcePaths, string destinationPath);
+        FileManagerResult RestoreFromTrash(string trashRelativePath, string restorePath);
         Task<UploadFilesManagerResponseModel> UploadFiles(UploadFilesManagerRequestModel request);
         Task<UploadFileManagerResponseModel> UploadFile(UploadFileManagerRequestModel request);
         (FileManagerResult, FileStreamResult) Download(string path);
