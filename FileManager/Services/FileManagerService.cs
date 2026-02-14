@@ -899,11 +899,17 @@ namespace FileManagerLite
         [NonAction]
         private DirectoryTreeResponseDto BuildTree(DirectoryInfo directory, string root, FileManagerSearchRequest? searchRequest)
         {
+            var isDirNode = (directory.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+
             var node = new DirectoryTreeResponseDto
             {
                 Name = directory.Name,
                 Path = Path.GetRelativePath(root, directory.FullName).Replace("\\", "/"),
                 IsDirectory = true,
+                HasSubDirectories = isDirNode
+                                    && Directory.EnumerateDirectories(directory.FullName).Any(),
+                SubscriptionsCount = isDirNode ? Directory.EnumerateFiles(directory.FullName).Count() + Directory.EnumerateDirectories(directory.FullName).Count()
+                    : 0,
                 DateModified = directory.LastWriteTime
             };
 
