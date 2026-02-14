@@ -249,6 +249,36 @@ namespace FileManagerLite
             return new DirectoryFileManagerResponseModel(200, "ok", true, result);
         }
 
+        public DirectoryFileManagerTreeResponseModel GetDirectoriesTree(string? currentPath, FileManagerSearchRequest? searchRequest = null)
+        {
+            try
+            {
+                var root = _pathProvider.WebRootPath;
+                var relativePath = string.IsNullOrEmpty(currentPath)
+                    ? _rootPath
+                    : currentPath.TrimEnd('/');
+
+                var fullPath = Path.GetFullPath(Path.Combine(root, relativePath));
+
+                // Path Traversal protection
+                if (!fullPath.StartsWith(root))
+                    return new DirectoryFileManagerTreeResponseModel(403, "مسیر غیرمجاز است");
+
+                if (!Directory.Exists(fullPath))
+                    return new DirectoryFileManagerTreeResponseModel(400, "فولدری یافت نشد !");
+
+                var directoryInfo = new DirectoryInfo(fullPath);
+
+                var tree = BuildTree(directoryInfo, root, searchRequest);
+
+                return new DirectoryFileManagerTreeResponseModel(200, "عملیات با موفقیت انجام شد", true, tree);
+            }
+            catch (Exception ex)
+            {
+                return new DirectoryFileManagerTreeResponseModel(500, $"خطا: {ex.Message}");
+            }
+        }
+
         public FileManagerResult MoveDirectoriesOrFiles(List<string> sourcePaths, string destinationPath)
         {
             if (sourcePaths == null || sourcePaths.Count == 0)
@@ -865,6 +895,73 @@ namespace FileManagerLite
                 });
             }
             return result;
+        }
+        [NonAction]
+        private DirectoryTreeResponseDto BuildTree(DirectoryInfo directory, string root, FileManagerSearchRequest? searchRequest)
+        {
+            var node = new DirectoryTreeResponseDto
+            {
+                Name = directory.Name,
+                Path = Path.GetRelativePath(root, directory.FullName).Replace("\\", "/"),
+                IsDirectory = true,
+                DateModified = directory.LastWriteTime
+            };
+
+            try
+            {
+                foreach (var dir in directory.GetDirectories())
+                {
+                    if (!string.IsNullOrEmpty(searchRequest?.Keyword) &&
+                        !dir.Name.Contains(searchRequest.Keyword, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    node.Children.Add(BuildTree(dir, root, searchRequest));
+                }
+
+                foreach (var file in directory.GetFiles())
+                {
+
+                    if (!string.IsNullOrEmpty(searchRequest?.Keyword) &&
+                        !file.Name.Contains(searchRequest.Keyword, StringComparison.OrdinalIgnoreCase))
+                        continue;
+
+                    if (searchRequest?.Extensions?.Count > 0)
+                    {
+                        var allowed = searchRequest.Extensions
+                            .Select(e => e.ToExtension())
+                            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+
+                        if (!allowed.Contains(file.Extension))
+                            continue;
+                    }
+
+                    var isDir = (file.Attributes & FileAttributes.Directory) == FileAttributes.Directory;
+
+
+                    node.Children.Add(new DirectoryTreeResponseDto
+                    {
+                        Name = file.Name,
+                        Path = Path.GetRelativePath(root, file.FullName).Replace("\\", "/"),
+                        IsDirectory = false,
+                        Size = file.Length,
+                        HasSubDirectories = isDir
+                                    && Directory.EnumerateDirectories(file.FullName).Any(),
+                        SubscriptionsCount = isDir ? Directory.EnumerateFiles(file.FullName).Count() + Directory.EnumerateDirectories(file.FullName).Count()
+                    : 0,
+                        DateModified = file.LastWriteTime
+                    });
+                }
+            }
+            catch
+            {
+            }
+
+            node.Children = node.Children
+                .OrderByDescending(x => x.IsDirectory)
+                .ThenBy(x => x.Name, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            return node;
         }
         [NonAction]
         private void AddDirectoryToZip(ZipArchive archive, string sourceDir, string entryName)

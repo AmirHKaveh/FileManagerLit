@@ -10,11 +10,31 @@
         public bool HasSubDirectories { get; set; }
         public DateTime DateModified { get; set; }
     }
+    public class DirectoryTreeResponseDto
+    {
+        public string Name { get; set; }
+        public string Path { get; set; }
+        public bool IsDirectory { get; set; }
+        public long Size { get; set; }
+        public int SubscriptionsCount { get; set; }
+        public bool HasSubDirectories { get; set; }
+        public DateTime DateModified { get; set; }
+        public List<DirectoryTreeResponseDto> Children { get; set; } = new();
+    }
 
     public class DirectoryFileManagerResponseModel : FileManagerResult
     {
         public List<DirectoryResponseDto> Directories { get; set; }
         public DirectoryFileManagerResponseModel(int statusCode, string message, bool isSucceed = false, List<DirectoryResponseDto> directories = null) : base(statusCode, message, isSucceed)
+        {
+            Directories = directories;
+        }
+
+    }
+    public class DirectoryFileManagerTreeResponseModel : FileManagerResult
+    {
+        public DirectoryTreeResponseDto? Directories { get; set; }
+        public DirectoryFileManagerTreeResponseModel(int statusCode, string message, bool isSucceed = false, DirectoryTreeResponseDto? directories = null) : base(statusCode, message, isSucceed)
         {
             Directories = directories;
         }
@@ -26,5 +46,4 @@
         public List<AllowExtensionsFileManager>? Extensions { get; set; }
         public bool IsRecursive { get; set; } = false;
     }
-
 }

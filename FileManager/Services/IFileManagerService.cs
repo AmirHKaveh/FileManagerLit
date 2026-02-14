@@ -8,8 +8,9 @@ namespace FileManagerLite
 {
     public interface IFileManagerService 
     {
-        DirectoryFileManagerResponseModel GetDirectories(string? currentPath, FileManagerSearchRequest searchRequest = null);
+        DirectoryFileManagerResponseModel GetDirectories(string? currentPath, FileManagerSearchRequest? searchRequest = null);
         DirectoryFileManagerResponseModel GetTrashDirectories(string? currentPath, FileManagerSearchRequest? searchRequest = null);
+        DirectoryFileManagerTreeResponseModel GetDirectoriesTree(string? currentPath, FileManagerSearchRequest? searchRequest = null);
         FileManagerResult CreateNewDirectory(string? currentPath, string directoryName);
         FileManagerResult RenameDirectoryOrFile(string sourcePath, string newName);
         FileManagerResult DeleteDirectoriesOrFiles(List<string> paths, bool isPermanent = false);
