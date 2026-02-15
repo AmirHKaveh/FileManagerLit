@@ -778,12 +778,12 @@ namespace FileManagerLite
         [NonAction]
         private string GetUniqueFileName(string basePath, string nameWithoutExt, string extension)
         {
-            var directoryName = $"{nameWithoutExt}{extension}";
+            var directoryName = $"{nameWithoutExt}.{extension}";
             var index = 1;
 
             while (System.IO.File.Exists(Path.Combine(basePath, directoryName)))
             {
-                directoryName = $"{nameWithoutExt}{string.Format("-copy({0})", index)}{extension}";
+                directoryName = $"{nameWithoutExt}{string.Format("-copy({0})", index)}.{extension}";
                 index++;
             }
 
